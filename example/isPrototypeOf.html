@@ -1,0 +1,128 @@
+<script src="../simpletest.js"></script>
+<script src="./isPrototypeOf.js"></script>
+<script>
+  // Tests.
+  tests({
+    'It should return a Boolean.': function() {
+      var returnedValue = isPrototypeOf({ name: 'Adam' }, { name: 'Eve' });
+      eq(typeof returnedValue, 'boolean');
+    },
+    'It should return true if prototypeObj lies in the prototype chain of the targetObj.': function() {
+      var myProtoObj = {};
+      var myObj = Object.create(myProtoObj);
+      eq(isPrototypeOf(myProtoObj, myObj), true);
+    },
+    'It should return false if prototypeObj does not lie in the prototype chain of the targetObj.': function() {
+      var myProtoObj = {};
+      var myObj = {};
+      eq(isPrototypeOf(myProtoObj, myObj), false);
+    },
+    'It should work for any number of prototype links.': function() {
+      var human = {
+        description: 'human',
+        tellYourProto: function() {
+          console.log(Object.getPrototypeOf(this).description);
+        }
+      };
+      var grandPa = Object.create(human);
+      grandPa.description = 'grand pa';
+      var dad = Object.create(grandPa);
+      dad.description = 'dad';
+      var son = Object.create(dad);
+      son.description = 'son';
+
+      // First layer prototype.
+      eq(isPrototypeOf(dad, son), true);
+      // Second layer prototype.
+      eq(isPrototypeOf(grandPa, son), true);
+      // Third layer prototype.
+      eq(isPrototypeOf(human, son), true);
+      // Fourth layer prototype.
+      eq(isPrototypeOf(Object.prototype, son), true);
+    },
+    'It should throw TypeError if prototypeObj is undefined or null.': function() {
+      var nullProto = null;
+      var undefinedProto = undefined;
+      var isTypeError = false;
+      var errorMessage = '';
+
+      // Lets test null.
+      try {
+        isPrototypeOf(nullProto, {});
+      } catch (e) {
+        isTypeError = true;
+        errorMessage = e.message;
+      }
+
+      eq(isTypeError, true);
+      eq(errorMessage, 'Cannot read property \'isPrototypeOf\' of null.');
+
+      // Lets test undefined.
+      isTypeError = false;
+      try {
+        isPrototypeOf(undefinedProto, {});
+      } catch (e) {
+        isTypeError = true;
+        errorMessage = e.message;
+      }
+
+      eq(isTypeError, true);
+      eq(errorMessage, 'Cannot read property \'isPrototypeOf\' of undefined.');
+    },
+    'It should pass Gordon\'s examples.': function() {
+      var canine = {
+        bark: function() {
+          console.log('bark');
+        }
+      };
+
+      var dog = Object.create(canine);
+      dog.fetch = function() {
+        console.log('fetch');
+      };
+
+      var myDog = Object.create(dog);
+      var empty = Object.create(null);
+
+      // These two lines are equivalent.
+      dog.isPrototypeOf(myDog);  // native function returns true
+      isPrototypeOf(dog, myDog); // your function does the same
+      eq(dog.isPrototypeOf(myDog), isPrototypeOf(dog, myDog));
+
+
+      // These two lines, similarly should return the same thing.
+      dog.isPrototypeOf(empty);  // native function returns false
+      isPrototypeOf(dog, empty); // your function does the same
+      eq(dog.isPrototypeOf(empty), isPrototypeOf(dog, empty));
+
+      // This should work too.
+      Object.prototype.isPrototypeOf(myDog);  // native function returns true
+      isPrototypeOf(Object.prototype, myDog); // your function does the same
+      eq(Object.prototype.isPrototypeOf(myDog), isPrototypeOf(Object.prototype, myDog));
+
+      // Also make sure that your function will work for any number of prototype links.
+      isPrototypeOf(canine, myDog) // true
+      eq(isPrototypeOf(canine, myDog), true)
+    },
+    'It should return false if targetObj is not an object.': function() {
+      // Let's check all the Java Script primitives.
+
+      // Numbers, should return false; but true for the Number object.
+      eq(isPrototypeOf(Object.prototype, 1), false);
+      eq(isPrototypeOf(Object.prototype, new Number(1)), true);
+
+      // Strings, should return false; but true for the String object.
+      eq(isPrototypeOf(Object.prototype, 'yay'), false);
+      eq(isPrototypeOf(Object.prototype, new String('yay')), true);
+
+      // Booleans, should return false; but true for the Boolean object.
+      eq(isPrototypeOf(Object.prototype, true), false);
+      eq(isPrototypeOf(Object.prototype, new Boolean(true)), true);
+
+      // Should return true for arrays (because array is an object).
+      eq(isPrototypeOf(Object.prototype, []), true);
+      // Should return true for functions (because function is an object too).
+      eq(isPrototypeOf(Object.prototype, function() { }), true);
+    }
+  });
+</script>
